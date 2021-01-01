@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    
+  
+    <style>
+#my_camera{
+    
+    border-radius: 10px; 
+}
+</style>
+
+    <title></title>
+</head>
+
+<body>
+<ol class="breadcrumb">
+  <li class="breadcrumb-item ">Deepface API</li>
+</ol>
+
+<div class="container mt-3">
+  <div class="row">
+    
+    <div class="col-sm ">
+      <h4>Live Cam</h4>
+      <div id="my_camera"></div>
+      
+    </div>
+
+    <div class="col-sm  ">
+      <h4>Results</h4>
+          <ul class="list-group bg-primary">
+  <li class="list-group-item bg-primary d-flex justify-content-between align-items-center">
+    <div id="age"></div>
+  </li>
+
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <div id= "gender"></div>
+  </li>
+
+  <li class="list-group-item bg-primary d-flex justify-content-between align-items-center">
+    <div id= "race"></div>    
+  </li>
+
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    <div id= "emotion"></div>    
+  </li>
+  </ul>
+    </div>
+    <div class="col-sm img-fluid rounded">
+      <div><h4>Snapshot Submited to API</h4></div>
+      <div class="img-fluid rounded" id="results"></div>
+      
+    </div>
+  </div>
+</div>
+<br>
+<div class="container mt-3">
+
+  <div class="row">
+
+    <div class="col-sm align-items-center">
+     <div><input class="btn btn-success  center" type=button value="Take Snapshot" onClick="take_snapshot()"></div> 
+    </div>
+    <div class="col-sm ">
+     
+    </div>
+    <div class="col-sm ">
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+
+</body>
+
+</html>
+<!-- CSS -->
+
+
+
+
+<!-- Webcam.min.js -->
+<script type="text/javascript" src="js/webcamjs/webcam.min.js"></script>
+
+<!-- Configure a few settings and attach camera -->
+<script language="JavaScript">
+    const url = 'http://127.0.0.1:5000/analyze';
+    Webcam.set({
+        width: 320,
+        height: 240,
+        image_format: 'jpeg',
+        jpeg_quality: 90,
+    });
+    Webcam.attach('#my_camera');
+
+    <!-- Code to handle taking the snapshot and displaying it locally -->
+    function take_snapshot() {
+
+        // take snapshot and get image data
+        Webcam.snap(function(data_uri) {
+            // display results in page
+            document.getElementById('results').innerHTML =
+                '<img src="' + data_uri + '" class="rounded"/>';
+            console.log(data_uri)
+                //var datas = { img: [data_uri,] };
+                // request options
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({
+                    img: [data_uri]
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            console.log(options)
+
+            fetch(url, options)
+
+                //.then(response => response.json())
+                .then(r =>  r.json())
+
+                //.then(obj => console.log(JSON.stringify(obj)))
+                .then((obj) => {
+                  console.log(obj)
+
+                  var myobjstr =  JSON.stringify(obj)
+                  var myobjstrp = JSON.parse(myobjstr)
+
+                  console.log(JSON.stringify(myobjstr))
+                  console.log((myobjstrp.instance_1.age))
+
+                //document.write('type of data is '+ typeof myobjstr + '</br>');
+                //document.write(myobjstr);
+                var myage = myobjstrp.instance_1.age
+                if (myage > 30) {
+                  console.log("+30") // log to test
+                } else {
+                  console.log("-30")
+                }
+                document.getElementById("age").innerHTML = 'Age Estimated: ' + myobjstrp.instance_1.age + ' years old</tr> ';
+
+                document.getElementById("gender").innerHTML = '<tr>Gender: ' + myobjstrp.instance_1.gender + ' </tr>';
+
+                document.getElementById("race").innerHTML = '<tr>Dominant race: ' + myobjstrp.instance_1.dominant_race + ' </tr>';
+
+                document.getElementById("emotion").innerHTML = '<tr>Dominant emotion: ' + myobjstrp.instance_1.dominant_emotion + ' </tr>';                                                 
+                })                
+                //.then(obj => console.log(JSON.parse(obj)))
+
+                .catch(err => console.log(err))
+
+
+                //.then(response => response.json())
+
+                
+
+
+
+
+
+        });
+
+    }
+</script>
